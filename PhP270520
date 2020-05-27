@@ -1,0 +1,196 @@
+<?php
+
+/*
+    Groupe 1 : fabien, florent, laurent j, Yoan, Cyril
+    Groupe 1
+    -------
+    Réaliser un formulaire avec d'inscription avec placeholder et vérification des champs côté front, comportant :
+    - 1 champ name
+    - 1 champ pseudo
+    - 1 champ mail
+    - 1 champ password
+    Côté back : réceptionner et valider les variables postées (name, mail password)
+    Encoder le mot de passe avec  password_hash (utiliser password_verify pour effectuer la comparaison ultérieurement)
+    Enregistrez les variables dans un fichier (db.txt).
+    */
+
+
+?>
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Formulaire D'inscription</title>
+    </head>
+    <body>
+    <form method="post" action="index.php">
+        <label for="name">name</label>
+        <input type="text" name="name" id="name" required placeholder="Name" pattern="^[a-zA-Z][a-zA-Z]{1,80}$">
+        <label for="pseudo">pseudo</label>
+        <input type="text" name="pseudo" id="pseudo" required placeholder="Pseudo">
+        <label for="email">email</label>
+        <input type="email" name="email" id="email" required placeholder="Email">
+        <label for="passord">password</label>
+        <input type="password" name="password" id="password" required placeholder="Password">
+        <button type="submit" name="inscription">Submit</button>
+    </form>
+
+    <form method="post" action="index.php">
+        <label for="pseudo">Pseudo :</label>
+        <input name="pseudo" type="text" id="pseudo" required placeholder="Pseudo">
+        <label for="password">Mot de Passe :</label>
+        <input type="password" name="password" id="password" required placeholder="Password">
+        <input type="submit" name="connection" value="Connexion">
+    </form>
+    </body>
+    </html>
+
+
+<?php
+//côté back
+$name = $pseudo = $email = $password = "";
+$nameErr = $pseudoErr = $passwordErr = $emailErr = "";
+//password_hash(string $password) : string;
+
+function test_input($data) : string
+{
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if(isset($_POST['inscription'])){
+        if (empty($POST["name"])) {
+            $nameErr = "Name is required";
+        } else if (!preg_match ("/^[a-zA-Z ]*$/",$name)) {
+            $nameErr = "Only letters and white spaces please";
+        } else {
+            $name = test_input($_POST["name"]);
+        }
+
+        if (empty($POST["pseudo"])) {
+            $pseudoErr = "Pseudo is required";
+        } else if (!preg_match ("/^[a-zA-Z ]*$/",$pseudo)) {
+            $pseudoErr = "Only letters and white spaces please";
+        } else {
+            $pseudo = test_input($_POST["pseudo"]);
+        }
+
+        if (empty($_POST["email"])) {
+            $emailErr = "Email is required";
+        } else {
+            $email = test_input($_POST["email"]);
+        }
+        // check if e-mail address is well-formed
+        if (!filter_var ($email, FILTER_VALIDATE_EMAIL)) {
+            $emailErr = "Invalid email format";
+        }
+
+        if (empty($_POST["password"])) {
+            $passwordErr = "Password is required";
+        } else {
+            $password = test_input($_POST["password"]);
+            $password = password_hash($password);
+        }
+
+        if ($nameErr . $pseudoErr . $emailErr . $passwordErr === "") {
+            $line = "$name,$pseudo,$email,$password\n";
+
+            $fileHandle = fopen("db.txt", "a+");
+            fwrite($fileHandle, $line);
+            fclose($fileHandle);
+        }
+    }
+    if(isset($_POST['connection'])){
+        if (empty($POST["pseudo"])) {
+            $pseudoErr = "Pseudo is required";
+        } else if (!preg_match ("/^[a-zA-Z ]*$/",$pseudo)) {
+            $pseudoErr = "Only letters and white spaces please";
+        } else {
+            $pseudo = test_input($_POST["pseudo"]);
+        }
+        if (empty($_POST["password"])) {
+            $passwordErr = "Password is required";
+        } else {
+            $password = $_POST["password"];
+
+        }
+        $tableFromFile = file("db.txt");
+        foreach ($tableFromFile as $key=>$line){
+            // "tableau de tableau qui comporte les lignes sous forme de cellules"
+            $row = explode(",", $line);
+            if ($pseudo === $row[1]){
+                $pseudoErr = "Ok nice you're pseudo is good !";
+            }else{
+                echo "Pseudo non reconnu, tu ne sais pas utiliser un clavier ? ce site n'est pas fait pour toi ! veuillez entrer un pseudo valide ou inscrivez-vous en premier lieu, newbie...";
+            }
+            $password = password_hash($password);
+
+            if (password_verify($password, $row[3])) {
+                $passwordErr = "Ok nice you're password is good !";
+            }else{
+                echo "Mot de passe non reconnu, tu ne sais pas utiliser un clavier ? ce site n'est pas fait pour toi ! veuillez entrer un pseudo valide ou inscrivez-vous en premier lieu, newbie...";
+            }
+        }
+        // on vérifie si utilisateur présent en base
+
+
+        /*
+        foreach ($dbase as $key=>$line){
+            foreach($line as $key=>$column){
+                if ($pseudo === $column[1]){
+                }else{
+                    echo "Veuillez vous inscrire";
+                }
+            }
+        }*/
+    }
+}
+/*
+    id, champs ....\n
+    id uniqid();
+    $dbLine = "id,name,pseudo,password,mail\n"
+[
+    0=>  [
+        name,
+        pseudo ...
+    ],
+    1=>  [
+        name,
+        pseudo ...
+    ],
+    2=> [
+        name,
+        pseudo ...
+    ]
+]
+        $text = file_get_contents('montexte.txt'); "mon prenom c'est pierre"
+        $tableFromFile = file("text.txt"); "mon prenom \n c'est pierre"
+        $tableFromFile = ["mon prenom","c'est pierre"];
+	    $fileHandle = fopen('text.txt', "w+");
+	    fwrite($fileHandle,"Pierre c'est mon prénom");
+        fclose($fileHandle);
+        Groupe 2
+        -------
+        Réaliser un formulaire de connection avec avec placeholder et vérification des champs côté front, comportant :
+        - 1 champ pseudo
+        - 1 champ password
+        Côté back : récupérer les variables postées et les valider.
+        Puis vérifier que l'utilisateur est bien enregistré dans le fichier db.txt
+        et que les mots de passe (sauvegardé et posté) correspondent.
+        Si tout est ok afficher "You're welcome $pseudo !"
+        Astuces fonctions utiles pour ouvrir, lire et écrire dans un fichier
+        fopen, fwrite, fclose, file_get_contents,file()
+        function.password-hash
+        Sources :
+        https://www.php.net/manual/fr/faq.passwords.php
+        https://www.php.net/manual/fr/function.password-verify.php
+        https://www.php.net/manual/fr/function.password-hash.php
+        // Note Formateur :
+        Vous pouvez tout faire sur ce fichier !
+    */
+
+?>
